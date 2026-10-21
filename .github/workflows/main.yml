@@ -1,1 +1,41 @@
-There was an error committing your changes: A file with the same name already exists. Please choose a different name and try again.
+
+name: Build Trading 365 AI Agent
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) {
+            pip install -r requirements.txt
+          }
+          pip install pyinstaller customtkinter selenium requests pillow
+
+      - name: Build Windows EXE
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed --collect-all customtkinter --name Trading365AIAgent app.py
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trading365-AI-Agent-Windows
+          path: dist/Trading365AIAgent.exe
+          if-no-files-found: error
